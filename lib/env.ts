@@ -19,7 +19,7 @@ export const roleLabels: Record<AppRole, { en: string; ar: string }> = {
   owner: { en: 'Owner', ar: 'المالك' }, finance: { en: 'Finance', ar: 'المالية' }, operations: { en: 'Operations', ar: 'العمليات' }, production: { en: 'Production', ar: 'الإنتاج' }, viewer: { en: 'Viewer', ar: 'مشاهد' },
 }
 
-export function getRole(user: { app_metadata?: { role?: string } } | null): AppRole | null {
+export function getRole(user: { app_metadata?: Record<string, unknown> } | null): AppRole | null {
   const role = user?.app_metadata?.role
-  return role && role in roleLabels ? role as AppRole : null
+  return typeof role === 'string' && role in roleLabels ? role as AppRole : null
 }
