@@ -1,47 +1,24 @@
-export default function Page() {
-  return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
-    </main>
-  )
+import { createClient } from '@/lib/supabase/server'
+import { getRole, roleLabels, type AppRole } from '@/lib/env'
+import Shell from '@/components/shell'
+
+export default async function Page() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const role = getRole(user)
+  if (!user) return null
+  if (!role) return <main className="grid min-h-screen place-items-center bg-[#201d1b] px-6 text-center text-[#f3eee5]"><div><h1 className="font-serif text-3xl">Your account has no role yet.</h1><p className="mt-3 text-[#b7aa9b]">Please contact the owner.</p></div></main>
+  const [{ data: styles, error: stylesError }, { data: categories, error: categoriesError }, { data: products, error: productsError }, { data: lastSync, error: syncError }] = await Promise.all([
+    supabase.from('styles').select('id, name, shopify_product_type, lifecycle, is_set').order('created_at', { ascending: false }),
+    supabase.from('cost_categories').select('id, name_en, name_ar, needs_review, sort').order('sort').order('name_en'),
+    supabase.from('shopify_products').select('id, shopify_product_gid, title, handle, product_type, vendor, status, tags, variants, shopify_updated_at, updated_at').order('shopify_updated_at', { ascending: false }),
+    supabase.from('sync_runs').select('id, kind, resource, status, started_at, finished_at, records_seen, records_upserted, error').order('started_at', { ascending: false }).limit(1).maybeSingle(),
+  ])
+  const categoryIds = (categories ?? []).map((category) => category.id)
+  const { data: subcategories, error: subcategoriesError } = categoryIds.length ? await supabase.from('cost_subcategories').select('id, category_id, name_en, name_ar, needs_review, sort').in('category_id', categoryIds).order('sort').order('name_en') : { data: [], error: null }
+
+  return <Shell user={{ email: user.email ?? '', role, mfa: false }} styles={styles ?? []} categories={categories ?? []} subcategories={subcategories ?? []} products={products ?? []} lastSync={lastSync ?? null} dataError={stylesError?.message ?? categoriesError?.message ?? productsError?.message ?? syncError?.message ?? subcategoriesError?.message ?? null} />
 }
+
+export type { AppRole }
+export { roleLabels }

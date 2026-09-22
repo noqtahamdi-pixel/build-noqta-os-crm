@@ -1,33 +1,36 @@
-# build-noqta-os-crm
+# NOQTA OS
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Internal operations, costing and customer CRM for NOQTA, with a live Shopify catalog backed by Supabase.
 
-## Built with v0
+## Setup
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+1. Install dependencies with `pnpm install`.
+2. Ensure the Vercel/Supabase integration provides `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+3. Create users in Supabase Auth; there is intentionally no public sign-up route.
+4. Set each user's role in `app_metadata.role` to `owner`, `finance`, `operations`, `production`, or `viewer`.
+5. Run the app with `pnpm dev`.
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_Jw1USRze5Lt5rskFVCAq2WXrjgHc)
+## Product sync
 
-## Getting Started
+The Catalog screen reads `shopify_products` from Supabase. Owners and operations users can select **Sync Shopify** to fetch the public Shopify product feed and upsert products through the existing `shopify_upsert_product` database function.
 
-First, run the development server:
+The sync route also requires `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SHOPIFY_STORE_DOMAIN`. It does not expose the service-role key to browser code.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+## Assumptions
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- The Supabase database and seed data already exist; this app does not run SQL or migrations.
+- The Catalog screen is backed by the existing Shopify product tables and supports a manual refresh from Shopify.
+- The preview uses an owner shell until server session wiring is connected to the signed-in Supabase user. Role enforcement belongs in the server guard before production access.
+- English is the default UI language; the visible switcher demonstrates Arabic copy and RTL layout. Persisting the choice per user will use the authenticated profile in the next app phase.
+- MFA enrollment and challenge UI is reserved for the auth route surface; TOTP is required for owner and finance before production rollout.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables read
 
-## Learn More
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL` (optional)
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` (server only)
+- `SHOPIFY_STORE_DOMAIN`
 
-To learn more, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+No service-role key is read by browser code.
