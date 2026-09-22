@@ -1,12 +1,16 @@
-const required = (key: string) => {
-  const value = process.env[key]
+const required = (value: string | undefined, key: string) => {
   if (!value) throw new Error(`Missing environment variable: ${key}`)
   return value
 }
 
+// Keep public variables as direct references so Next.js can inline them in browser bundles.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
 export const env = {
-  supabaseUrl: required('NEXT_PUBLIC_SUPABASE_URL'),
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? required('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+  supabaseUrl: required(supabaseUrl, 'NEXT_PUBLIC_SUPABASE_URL'),
+  supabaseAnonKey: required(supabaseAnonKey ?? supabasePublishableKey, 'NEXT_PUBLIC_SUPABASE_ANON_KEY'),
   redirectUrl: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL,
 }
 
