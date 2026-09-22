@@ -1,47 +1,60 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { Bell, BookOpen, Boxes, ChevronDown, CircleDollarSign, Command, Database, Factory, FileText, Globe2, LayoutDashboard, Menu, Moon, Package, PanelLeft, Search, Settings, ShieldCheck, ShoppingBag, Sparkles, Sun, Users, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+type Role = 'owner' | 'finance' | 'operations' | 'production' | 'viewer'
+const nav: readonly [string, string, typeof LayoutDashboard, readonly Role[]][] = [
+  ['Dashboard', 'لوحة التحكم', LayoutDashboard, ['owner','finance','operations','production','viewer']],
+  ['Catalog', 'الكتالوج', Package, ['owner','operations','production','viewer']],
+  ['Development', 'التطوير', Sparkles, ['owner','production']],
+  ['Materials & Fabric', 'الخامات والأقمشة', Boxes, ['owner','production']],
+  ['Production', 'الإنتاج', Factory, ['owner','production','operations']],
+  ['Costs', 'التكاليف', CircleDollarSign, ['owner','finance']],
+  ['Marketing', 'التسويق', BookOpen, ['owner','operations']],
+  ['Orders & COD', 'الطلبات والدفع عند الاستلام', ShoppingBag, ['owner','operations']],
+  ['Customers', 'العملاء', Users, ['owner','operations']],
+  ['Reports', 'التقارير', FileText, ['owner','finance','operations','viewer']],
+  ['Data Health', 'صحة البيانات', ShieldCheck, ['owner','operations']],
+  ['Settings', 'الإعدادات', Settings, ['owner','finance','operations','production','viewer']],
+] as const
+
+const categories = [
+  { en: 'Fabric & Materials', ar: 'الأقمشة والخامات', count: 18, sub: [{en:'Main fabric',ar:'القماش الأساسي', review:false},{en:'Lining',ar:'البطانة',review:false},{en:'Trims & accessories',ar:'الإكسسوارات والمستلزمات',review:true}] },
+  { en: 'Manufacturing & CMT', ar: 'التصنيع والخياطة', count: 11, sub: [{en:'Cut, make, trim',ar:'قص وخياطة وتشطيب',review:false},{en:'Finishing',ar:'التشطيب',review:false}] },
+  { en: 'Dyeing & Processing', ar: 'الصباغة والمعالجة', count: 9, sub: [{en:'Dyeing',ar:'الصباغة',review:false},{en:'Washing & pre-shrink',ar:'الغسيل والانكماش',review:true}] },
+  { en: 'Sampling & Development', ar: 'العينات والتطوير', count: 8, sub: [{en:'Patterns',ar:'الباترونات',review:false},{en:'Samples & revisions',ar:'العينات والتعديلات',review:false}] },
+  { en: 'Transport & Logistics', ar: 'النقل واللوجستيات', count: 13, sub: [{en:'Supplier transport',ar:'نقل الموردين',review:false},{en:'Courier & delivery',ar:'الشحن والتوصيل',review:false}] },
+  { en: 'Packaging', ar: 'التغليف', count: 7, sub: [{en:'Packaging materials',ar:'مواد التغليف',review:false}] },
+  { en: 'Marketing & Content', ar: 'التسويق والمحتوى', count: 12, sub: [{en:'Paid media',ar:'الإعلانات المدفوعة',review:false},{en:'Influencer gifting',ar:'هدايا المؤثرين',review:true}] },
+  { en: 'People & Contractors', ar: 'الأفراد والمتعاقدون', count: 6, sub: [{en:'Freelancers',ar:'المستقلون',review:false}] },
+  { en: 'Platform & Software', ar: 'المنصات والبرمجيات', count: 5, sub: [{en:'Subscriptions',ar:'الاشتراكات',review:false}] },
+  { en: 'Overhead', ar: 'المصاريف العامة', count: 15, sub: [{en:'Studio & workspace',ar:'الاستوديو ومكان العمل',review:false},{en:'Utilities',ar:'المرافق',review:false}] },
+]
+
 export default function Page() {
-  return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
-    </main>
-  )
+  const [active, setActive] = useState('Dashboard')
+  const [role] = useState<Role>('owner')
+  const [rtl, setRtl] = useState(false)
+  const [dark, setDark] = useState(true)
+  const [mobile, setMobile] = useState(false)
+  const [query, setQuery] = useState('')
+  const visibleNav = nav.filter(([, , , roles]) => roles.includes(role))
+  const filtered = useMemo(() => categories.filter(c => `${c.en} ${c.ar}`.toLowerCase().includes(query.toLowerCase())), [query])
+  const title = active === 'Catalog' ? 'Styles' : active === 'Costs' ? 'Cost categories' : active
+
+  return <div dir={rtl ? 'rtl' : 'ltr'} className={cn('min-h-screen bg-[#f5f1e9] text-[#302b27]', dark && 'dark bg-[#201d1b] text-[#f3eee5]')}>
+    <aside className={cn('fixed inset-y-0 z-30 flex w-[248px] flex-col border-e border-[#ddd3c5] bg-[#eee7dc] p-4 transition-transform dark:border-[#39332f] dark:bg-[#292522]', mobile ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full lg:ltr:translate-x-0 lg:rtl:translate-x-0')}>
+      <div className="flex items-center justify-between px-2 pb-7"><div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl bg-[#6d3d42] text-lg font-bold text-[#fff9ef]">N</div><div><div className="font-semibold tracking-[.18em]">NOQTA</div><div className="text-[10px] uppercase tracking-[.22em] text-[#88796c]">operations OS</div></div></div><button aria-label="Close menu" className="lg:hidden" onClick={() => setMobile(false)}><X /></button></div>
+      <nav className="flex flex-1 flex-col gap-1">{visibleNav.map(([en, ar, Icon]) => <button key={en} onClick={() => {setActive(en);setMobile(false)}} className={cn('flex items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm transition-colors', active === en ? 'bg-[#6d3d42] text-[#fff9ef] shadow-sm' : 'text-[#625951] hover:bg-[#e4dbce] dark:text-[#c7bdb1] dark:hover:bg-[#38312d]')}><Icon className="size-[17px]" /><span className="flex-1">{rtl ? ar : en}</span>{en === 'Costs' && <span className="rounded-full bg-[#d5c1a8] px-1.5 text-[10px] text-[#57463b]">10</span>}</button>)}</nav>
+      <div className="border-t border-[#d8cdbf] pt-3 dark:border-[#413a35]"><button onClick={() => setRtl(!rtl)} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-[#625951] dark:text-[#c7bdb1]"><Globe2 className="size-[17px]" />{rtl ? 'English' : 'العربية'}<ChevronDown className="ms-auto size-4" /></button><button onClick={() => setDark(!dark)} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-[#625951] dark:text-[#c7bdb1]">{dark ? <Sun className="size-[17px]" /> : <Moon className="size-[17px]" />} {dark ? 'Light mode' : 'Dark mode'}</button><div className="mt-3 flex items-center gap-3 rounded-xl bg-[#e4dbce] p-2.5 dark:bg-[#38312d]"><div className="grid size-8 place-items-center rounded-full bg-[#b9c4ad] text-xs font-semibold text-[#394436]">NA</div><div className="min-w-0"><div className="truncate text-xs font-semibold">Noqta Admin</div><div className="text-[11px] text-[#88796c]">Owner</div></div><ChevronDown className="ms-auto size-4 text-[#88796c]" /></div></div>
+    </aside>
+    <div className="lg:ltr:ps-[248px] lg:rtl:pe-[248px]"><header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-[#ddd3c5]/80 bg-[#f5f1e9]/90 px-4 backdrop-blur dark:border-[#39332f]/80 dark:bg-[#201d1b]/90 sm:px-8"><button aria-label="Open menu" onClick={() => setMobile(true)} className="lg:hidden"><Menu /></button><div className="flex min-w-0 flex-1 items-center gap-3"><button className="hidden items-center gap-2 rounded-lg border border-[#d8cdbf] px-3 py-2 text-sm text-[#88796c] dark:border-[#453d38] sm:flex"><Search className="size-4" />Search anything <kbd className="ms-5 rounded bg-[#e7dfd4] px-1.5 py-0.5 text-[10px] dark:bg-[#38312d]">⌘ K</kbd></button><span className="text-sm text-[#88796c] sm:hidden"><Search className="size-5" /></span></div><button aria-label="Notifications" className="relative rounded-lg p-2 text-[#88796c]"><Bell className="size-[18px]" /><span className="absolute end-1.5 top-1.5 size-1.5 rounded-full bg-[#9a5c5f]" /></button><div className="hidden items-center gap-2 border-s border-[#d8cdbf] ps-4 text-end dark:border-[#453d38] sm:block"><div className="text-xs font-medium">Good morning, Nadine</div><div className="text-[11px] text-[#88796c]">Monday, 22 September 2026</div></div></header>
+    <main className="mx-auto max-w-[1440px] p-4 sm:p-8"><div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-xs text-[#88796c]"><span>NOQTA OS</span><span>/</span><span>{active}</span></div><h1 className="font-serif text-3xl tracking-tight sm:text-4xl">{rtl ? (active === 'Costs' ? 'فئات التكلفة' : active === 'Catalog' ? 'الأنماط' : 'لوحة التحكم') : title}</h1><p className="mt-2 text-sm text-[#88796c]">{active === 'Costs' ? 'Your controlled taxonomy for every EGP spent.' : active === 'Catalog' ? 'Styles, colorways and variants from your collection.' : 'A calm view of what needs your attention today.'}</p></div><div className="flex items-center gap-2"><button className="rounded-lg border border-[#d8cdbf] p-2.5 text-[#625951] dark:border-[#453d38] dark:text-[#c7bdb1]" aria-label="Command palette"><Command className="size-4" /></button><button className="rounded-lg bg-[#6d3d42] px-4 py-2.5 text-sm font-medium text-[#fff9ef] shadow-sm">{active === 'Costs' ? '+ Add cost' : 'Quick add'}</button></div></div>
+      {active === 'Catalog' ? <section className="rounded-2xl border border-dashed border-[#cfc3b4] bg-[#eee7dc]/50 p-10 text-center dark:border-[#4a413b] dark:bg-[#292522]/50"><div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-[#dce3d5] text-[#61735d] dark:bg-[#374333]"><Package className="size-7" /></div><h2 className="text-lg font-semibold">No styles yet</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#88796c]">Your catalog is ready. Styles synced from Shopify or created manually will appear here.</p><button className="mt-6 rounded-lg bg-[#6d3d42] px-4 py-2.5 text-sm font-medium text-[#fff9ef]">Create your first style</button></section> : active === 'Costs' ? <section><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div className="relative"><Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-[#88796c]" /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search categories" className="w-64 rounded-lg border border-[#d8cdbf] bg-transparent py-2.5 ps-9 pe-3 text-sm outline-none focus:ring-2 focus:ring-[#a27a76] dark:border-[#453d38]" /></div><div className="flex items-center gap-2 text-xs text-[#88796c]"><span className="size-2 rounded-full bg-[#c49b65]" /> 104 subcategories <span className="ms-3 size-2 rounded-full bg-[#9a5c5f]" /> Needs review</div></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{filtered.map(c => <article key={c.en} className="rounded-2xl border border-[#ddd3c5] bg-[#fbf8f2] p-5 dark:border-[#39332f] dark:bg-[#292522]"><div className="mb-5 flex items-start justify-between"><div><h2 className="font-semibold">{rtl ? c.ar : c.en}</h2><p className="mt-1 text-xs text-[#88796c]">{rtl ? c.en : c.ar}</p></div><span className="rounded-full bg-[#e8dfd2] px-2 py-1 text-xs text-[#77695e] dark:bg-[#3b332e]">{c.count} items</span></div><div className="flex flex-col gap-2">{c.sub.map(s => <div key={s.en} className="flex items-center justify-between rounded-lg bg-[#f2ece3] px-3 py-2.5 text-sm dark:bg-[#332d29]"><span>{rtl ? s.ar : s.en}<span className="ms-2 text-xs text-[#a09284]">{rtl ? s.en : s.ar}</span></span>{s.review && <span className="rounded-full bg-[#f1dfc0] px-2 py-0.5 text-[10px] font-medium text-[#77562d]">Needs review</span>}</div>)}</div></article>)}</div></section> : <Dashboard />}
+    </main></div></div>
 }
+
+function Dashboard() { return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Stat label="Spend this month" value="EGP 0.00" note="No entries yet" icon={CircleDollarSign} /><Stat label="Styles in catalog" value="0" note="Ready to create" icon={Package} /><Stat label="Open orders" value="0" note="No Shopify sync yet" icon={ShoppingBag} /><Stat label="Data health" value="Ready" note="Awaiting first sync" icon={Database} /><div className="rounded-2xl border border-[#ddd3c5] bg-[#fbf8f2] p-5 sm:col-span-2 xl:col-span-3 dark:border-[#39332f] dark:bg-[#292522]"><div className="mb-8 flex items-center justify-between"><div><h2 className="font-semibold">Your operating rhythm</h2><p className="mt-1 text-sm text-[#88796c]">Live activity will appear as your team works.</p></div><PanelLeft className="size-5 text-[#a09284]" /></div><div className="flex h-32 items-end gap-3">{[24,42,31,55,38,67,48,78,61,92,70,84].map((h,i)=><div key={i} className="flex flex-1 flex-col items-center gap-2"><div style={{height:`${h}%`}} className="w-full rounded-t-md bg-[#b9c4ad]" /><span className="text-[10px] text-[#a09284]">{['Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'][i]}</span></div>)}</div></div><div className="rounded-2xl border border-[#ddd3c5] bg-[#fbf8f2] p-5 sm:col-span-2 xl:col-span-1 dark:border-[#39332f] dark:bg-[#292522]"><h2 className="font-semibold">Next steps</h2><div className="mt-5 flex flex-col gap-4 text-sm"><div className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#dce3d5] text-xs text-[#61735d]">1</span><span>Confirm your role and MFA setup</span></div><div className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#ead8d7] text-xs text-[#8a5257]">2</span><span>Add your first style to Catalog</span></div><div className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#eee0c7] text-xs text-[#77562d]">3</span><span>Review seeded cost categories</span></div></div></div></div> }
+function Stat({label,value,note,icon:Icon}:{label:string,value:string,note:string,icon:typeof Database}) { return <div className="rounded-2xl border border-[#ddd3c5] bg-[#fbf8f2] p-5 dark:border-[#39332f] dark:bg-[#292522]"><div className="mb-6 flex items-center justify-between"><span className="text-sm text-[#88796c]">{label}</span><Icon className="size-5 text-[#a27a76]" /></div><div className="text-2xl font-semibold tracking-tight">{value}</div><div className="mt-2 text-xs text-[#88796c]">{note}</div></div> }
