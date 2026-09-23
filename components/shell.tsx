@@ -77,7 +77,11 @@ const icons: Record<string, LucideIcon> = {
 
 function formatDate(value: string | null | undefined) {
   if (!value) return 'Not available'
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Africa/Cairo',
+  }).format(new Date(value))
 }
 
 function priceRange(product: Product) {
